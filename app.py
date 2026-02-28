@@ -9,7 +9,11 @@ app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 def get_file_info(filename):
     """获取文件信息"""
     filepath = os.path.join(DOWNLOAD_FOLDER, filename)
-    stat = os.stat(filepath)
+    try:
+        stat = os.stat(filepath)
+    except (FileNotFoundError, OSError):
+        # 文件可能在读取时被删除，返回 None
+        return None
     size = stat.st_size
     mtime = datetime.fromtimestamp(stat.st_mtime)
     ext = os.path.splitext(filename)[1].lower()
@@ -51,7 +55,8 @@ def index():
     files = [f for f in os.listdir(DOWNLOAD_FOLDER)
              if os.path.isfile(os.path.join(DOWNLOAD_FOLDER, f))]
 
-    file_list = sorted([get_file_info(f) for f in files],
+    file_list = sorted([info for f in files
+                        if (info := get_file_info(f)) is not None],
                       key=lambda x: x['name'])
 
     return render_template('index.html', files=file_list)
