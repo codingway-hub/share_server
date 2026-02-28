@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Server - 赛博朋克文件共享</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">CYBER SHARE</div>
+            <p class="text-secondary mt-2">局域网文件与文字共享服务器</p>
+        </header>
+
+        <nav>
+            <a href="/upload" class="btn">上传文件</a>
+            <a href="/files" class="btn btn-primary">文件列表</a>
+            <a href="/notes" class="btn">便签列表</a>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2 class="text-neon-cyan mb-2">文件传输</h2>
+                <p class="text-secondary mb-3">支持断点续传的大文件传输，快速在设备间分享文件</p>
+                <a href="/upload" class="btn">立即上传</a>
+            </div>
+
+            <div class="card">
+                <h2 class="text-neon-magenta mb-2">文字便签</h2>
+                <p class="text-secondary mb-3">支持 Markdown 的临时便签，快速分享文字内容</p>
+                <a href="/notes" class="btn btn-primary">创建便签</a>
+            </div>
+
+            <div class="card">
+                <h2 style="color: var(--neon-purple)" class="mb-2">安全保护</h2>
+                <p class="text-secondary mb-3">为文件和便签设置访问密码，保护您的隐私</p>
+                <a href="/files" class="btn">查看详情</a>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem; text-align: center;">
+            <p class="text-secondary">
+                霓虹发光风格 | 支持断点续传 | 局域网快速传输
+            </p>
+        </div>
+
+        <footer>
+            <p class="text-secondary">&copy; 2024 CYBER SHARE | 赛博朋克文件共享</p>
+        </footer>
+    </div>
+</body>
+</html>
