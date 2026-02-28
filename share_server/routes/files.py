@@ -95,7 +95,10 @@ def list_files():
 
 @files_bp.route('/<int:file_id>', methods=['GET'])
 def download_file(file_id):
-    file_record = File.query.get_or_404(file_id)
+    """Download a file with password verification and resumable download support."""
+    file_record = File.query.get(file_id)
+    if not file_record:
+        return jsonify({'error': 'File not found'}), 404
 
     # Check password if set
     if file_record.password:
@@ -173,7 +176,10 @@ def download_file(file_id):
 
 @files_bp.route('/<int:file_id>', methods=['DELETE'])
 def delete_file(file_id):
-    file_record = File.query.get_or_404(file_id)
+    """Delete a file and its stored file."""
+    file_record = File.query.get(file_id)
+    if not file_record:
+        return jsonify({'error': 'File not found'}), 404
 
     # Delete from database first
     try:
