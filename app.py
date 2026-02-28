@@ -61,5 +61,72 @@ def index():
 
     return render_template('index.html', files=file_list)
 
+@app.route('/download/<filename>')
+def download(filename):
+    """支持断点续传的下载接口"""
+    filepath = os.path.join(DOWNLOAD_FOLDER, filename)
+
+    # 安全检查：防止路径遍历攻击
+    if '..' in filename or filename.startswith('/'):
+        return "Invalid filename", 400
+
+    if not os.path.exists(filepath):
+        return "File not found", 404
+
+    if not os.path.isfile(filepath):
+        return "Not a file", 400
+
+    file_size = os.path.getsize(filepath)
+    range_header = request.headers.get('Range')
+
+    if range_header:
+        # 处理断点续传请求
+        # Range: bytes=start-end
+        try:
+            byte_range = range_header.replace('bytes=', '').split('-')
+            start = int(byte_range[0]) if byte_range[0] else 0
+            end = int(byte_range[1]) if byte_range[1] else file_size - 1
+
+            # 验证范围
+            if start < 0 or end >= file_size or start > end:
+                return "Invalid range", 416
+
+            chunk_size = end - start + 1
+
+            def generate():
+                with open(filepath, 'rb') as f:
+                    f.seek(start)
+                    remaining = chunk_size
+                    while remaining > 0:
+                        chunk_size_read = min(8192, remaining)
+                        data = f.read(chunk_size_read)
+                        if not data:
+                            break
+                        remaining -= len(data)
+                        yield data
+
+            response = app.response_class(
+                generate(),
+                206,
+                direct_passthrough=True,
+                mimetype='application/octet-stream'
+            )
+            response.headers.add('Content-Range', f'bytes {start}-{end}/{file_size}')
+            response.headers.add('Accept-Ranges', 'bytes')
+            response.headers.add('Content-Length', str(chunk_size))
+        except (ValueError, IndexError):
+            return "Invalid range format", 400
+    else:
+        # 完整文件下载
+        response = send_file(
+            filepath,
+            as_attachment=True,
+            download_name=filename
+        )
+        response.headers.add('Accept-Ranges', 'bytes')
+
+    response.headers.add('Content-Disposition', f'attachment; filename="{filename}"')
+    return response
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
