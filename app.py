@@ -124,8 +124,6 @@ def download(filename):
             download_name=filename
         )
         response.headers.add('Accept-Ranges', 'bytes')
-
-    response.headers.add('Content-Disposition', f'attachment; filename="{filename}"')
     return response
 
 if __name__ == '__main__':
