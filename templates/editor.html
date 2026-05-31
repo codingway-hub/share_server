@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时协作文本编辑器</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        .editor-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .editor-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #b026ff 0%, #00f3ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(176, 38, 255, 0.1);
+            border: 1px solid rgba(176, 38, 255, 0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00f3ff;
+            box-shadow: 0 0 10px #00f3ff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .editor-wrapper {
+            position: relative;
+            background: rgba(20, 20, 40, 0.6);
+            border: 2px solid rgba(176, 38, 255, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(176, 38, 255, 0.2);
+        }
+
+        #sharedText {
+            width: 100%;
+            min-height: 400px;
+            background: rgba(10, 10, 30, 0.8);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: #fff;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        #sharedText:focus {
+            outline: none;
+            border-color: rgba(0, 243, 255, 0.6);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-copy {
+            flex: 1;
+            padding: 1rem;
+            background: linear-gradient(135deg, #b026ff 0%, #00f3ff 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(176, 38, 255, 0.4);
+        }
+
+        .btn-copy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(176, 38, 255, 0.6);
+        }
+
+        .btn-copy:active {
+            transform: translateY(0);
+        }
+
+        .btn-back {
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .char-count {
+            text-align: right;
+            margin-top: 0.5rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1>📝 实时协作文本编辑器</h1>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="statusText">已连接</span>
+            </div>
+        </div>
+
+        <div class="editor-wrapper">
+            <textarea id="sharedText" placeholder="在这里输入文本，局域网内所有设备将实时同步..."></textarea>
+            <div class="char-count">
+                字符数: <span id="charCount">0</span>
+            </div>
+        </div>
+
+        <div class="editor-actions">
+            <button class="btn-copy" onclick="copyText()">
+                📋 复制全部内容
+            </button>
+            <button class="btn-back" onclick="goBack()">
+                ← 返回下载中心
+            </button>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        const socket = io();
+        const textarea = document.getElementById('sharedText');
+        const statusText = document.getElementById('statusText');
+        const charCount = document.getElementById('charCount');
+        let isUpdating = false;
+
+        // 连接成功
+        socket.on('connect', () => {
+            statusText.textContent = '已连接';
+            showNotification('已连接到服务器');
+        });
+
+        // 连接断开
+        socket.on('disconnect', () => {
+            statusText.textContent = '连接断开';
+            showNotification('连接已断开，正在重连...', 'warning');
+        });
+
+        // 接收文本更新
+        socket.on('text_update', (data) => {
+            if (!isUpdating) {
+                const cursorPos = textarea.selectionStart;
+                textarea.value = data.text;
+                updateCharCount();
+
+                // 尝试保持光标位置
+                if (document.activeElement !== textarea) {
+                    textarea.setSelectionRange(cursorPos, cursorPos);
+                }
+            }
+        });
+
+        // 文本变化时发送更新
+        textarea.addEventListener('input', () => {
+            isUpdating = true;
+            socket.emit('text_change', { text: textarea.value });
+            updateCharCount();
+            setTimeout(() => { isUpdating = false; }, 100);
+        });
+
+        // 更新字符计数
+        function updateCharCount() {
+            charCount.textContent = textarea.value.length;
+        }
+
+        // 复制文本
+        function copyText() {
+            textarea.select();
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                showNotification('内容已复制到剪贴板');
+            }).catch(() => {
+                showNotification('复制失败，请手动复制', 'error');
+            });
+        }
+
+        // 返回首页
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification show';
+            if (type === 'warning' || type === 'error') {
+                notification.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)';
+            } else {
+                notification.style.background = 'linear-gradient(135deg, #b026ff 0%, #00f3ff 100%)';
+            }
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        // 初始化字符计数
+        updateCharCount();
+    </script>
+</body>
+</html>

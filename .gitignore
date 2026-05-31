@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 *.so
 
+.claude/settings.local.json
+
 # Virtual environments
 venv/
 env/

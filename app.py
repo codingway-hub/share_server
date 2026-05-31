@@ -1,10 +1,17 @@
 from flask import Flask, render_template, send_file, request
+from flask_socketio import SocketIO, emit
 import os
 from datetime import datetime
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key-here'
 DOWNLOAD_FOLDER = os.path.abspath('downloads')
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
+
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
+
+# 存储共享文本内容
+shared_text = ""
 
 def get_file_info(filename):
     """获取文件信息"""
@@ -60,6 +67,23 @@ def index():
                       key=lambda x: x['name'])
 
     return render_template('index.html', files=file_list)
+
+@app.route('/editor')
+def editor():
+    """实时协作文本编辑器页面"""
+    return render_template('editor.html')
+
+@socketio.on('connect')
+def handle_connect():
+    """客户端连接时发送当前文本内容"""
+    emit('text_update', {'text': shared_text})
+
+@socketio.on('text_change')
+def handle_text_change(data):
+    """处理文本变化并广播给所有客户端"""
+    global shared_text
+    shared_text = data['text']
+    emit('text_update', {'text': shared_text}, broadcast=True, include_self=False)
 
 @app.route('/download/<filename>')
 def download(filename):
@@ -127,4 +151,4 @@ def download(filename):
     return response
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True, allow_unsafe_werkzeug=True)
