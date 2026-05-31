@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载中心</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>下载中心</h1>
+
+        {% if files %}
+        <div class="file-grid">
+            {% for file in files %}
+            <div class="file-card">
+                <div class="file-icon">{{ file.icon }}</div>
+                <div class="file-info">
+                    <h3 class="file-name">{{ file.name }}</h3>
+                    <div class="file-meta">
+                        <span class="file-size">{{ file.size }}</span>
+                        <span class="file-mtime">{{ file.mtime }}</span>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <button class="btn btn-primary" onclick="downloadFile('{{ file.name }}')">
+                        ⬇️ 下载
+                    </button>
+                    <button class="btn btn-secondary" onclick="copyLink('{{ file.name }}')">
+                        🔗 复制链接
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>暂无文件，请将文件放入 downloads 文件夹</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        function downloadFile(filename) {
+            window.location.href = `/download/${filename}`;
+        }
+
+        function copyLink(filename) {
+            const link = `${window.location.origin}/download/${filename}`;
+            navigator.clipboard.writeText(link).then(() => {
+                showNotification('链接已复制到剪贴板');
+            }).catch(() => {
+                showNotification('复制失败，请手动复制');
+            });
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
