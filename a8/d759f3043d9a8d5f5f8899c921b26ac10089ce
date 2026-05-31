@@ -1,0 +1,36 @@
+templates/editor.html
+  s_759dfb8af34ab1::t_38891a55af77c2 1-249
+requirements.txt
+  s_759dfb8af34ab1::t_186a9e99f5aae4 3-4
+templates/index.html
+  s_759dfb8af34ab1::t_fba3d5fdba294d 11-16
+app.py
+  s_759dfb8af34ab1::t_567a8b795e769b 154
+  s_759dfb8af34ab1::t_9dcc7966e8c878 71-87
+  s_759dfb8af34ab1::t_ea082173069a0e 2,7,12-14
+  s_759dfb8af34ab1::t_47771e7e0fecd7 11
+.claude/settings.local.json
+  s_759dfb8af34ab1::t_fb3632328de0e4 14-16
+  s_759dfb8af34ab1::t_863ead75d8f744 9
+  s_759dfb8af34ab1::t_ce7d9b4a446cb2 10
+  s_759dfb8af34ab1::t_5253d7b1587265 11
+  s_759dfb8af34ab1::t_c71a138f93ee97 8
+  s_759dfb8af34ab1::t_8d0a278db20ac5 12
+  s_759dfb8af34ab1::t_de97fae264a080 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "a8d759f3043d9a8d5f5f8899c921b26ac10089ce",
+  "prompts": {},
+  "sessions": {
+    "s_759dfb8af34ab1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae6cee59-3f33-438f-b933-6b045347d90d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "liuwei654 <15712315+liuwei654@user.noreply.gitee.com>"
+    }
+  }
+}
