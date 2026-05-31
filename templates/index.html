@@ -8,7 +8,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>下载中心</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>下载中心</h1>
+            <a href="/editor" style="padding: 0.8rem 1.5rem; background: linear-gradient(135deg, #b026ff 0%, #00f3ff 100%); border-radius: 8px; color: #fff; text-decoration: none; font-weight: 600; box-shadow: 0 4px 15px rgba(176, 38, 255, 0.4); transition: all 0.3s ease;">
+                📝 实时协作编辑器
+            </a>
+        </div>
 
         {% if files %}
         <div class="file-grid">
