@@ -24,7 +24,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-3. 访问 http://localhost:5000
+3. 访问 http://localhost:5001
 
 ## 断点下载
 
@@ -36,7 +36,7 @@ python app.py
 
 - `DOWNLOAD_FOLDER`: 下载文件存放目录
 - `host`: 监听地址（默认 0.0.0.0）
-- `port`: 监听端口（默认 5000）
+- `port`: 监听端口（默认 5001）
 
 ## 技术栈
 
